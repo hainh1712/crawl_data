@@ -54,30 +54,43 @@ def binance():
     for article_element in post_elements:
         href = article_element.get_attribute("href")
         article = {
+            "type": "binance",
             "post_title": article_element.find_element(By.CLASS_NAME, "carousel-card-title").text,
             "post_content": article_element.find_element(By.CLASS_NAME, "carousel-card-content").text,
             "post_date": article_element.find_element(By.CLASS_NAME, "carousel-card-date").text,
-            "post_image": article_element.find_element(By.TAG_NAME, "img").get_attribute("src")
+            "post_tags": "",
+            "post_length": "",
+            "post_link": href,
         } 
         driver.execute_script("window.open('" + href + "', '_blank');")
 
         driver.switch_to.window(driver.window_handles[-1])
         article_child = {
+            "post_author": "",
             "post_description": driver.find_element(By.CLASS_NAME, "richtext-container").text,
+            "post_image": []
         }
+        images = driver.find_elements(By.TAG_NAME, "img")
+        for image in images[1:-2]:
+            src_value = image.get_attribute("src")
+            article_child["post_image"].append(src_value)
         driver.close()
         driver.switch_to.window(driver.window_handles[0])
         article.update(article_child)
         # article["binance"].update(article_child)
         articles_list.append(article)
-    data = {}
 
-    with open("data.json", "r") as json_file:
-        data = json.load(json_file)
-    data["binance"] = articles_list
-    
-    with open("data.json", "w") as json_file:
-        json.dump(data, json_file, indent=4)
+    # with open("binance.json", "w") as outfile:
+    #     json.dump(articles_list, outfile)
+    try:
+        with open("data.json", 'r') as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        # Nếu file không tồn tại, tạo một danh sách mới
+        data = []
+    data.extend(articles_list)
+    with open("data.json", 'w') as file:
+        json.dump(data, file, indent=2)
 
     driver.close()
 

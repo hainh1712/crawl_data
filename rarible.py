@@ -52,17 +52,19 @@ def rarible():
     article_elements = articles.find_elements(By.CLASS_NAME, "post-card")
     articles_list = []
     for article_element in article_elements:
-        article = {
-            "post_tags": article_element.find_element(By.CLASS_NAME, "post-card-tags").text,
-            "post_title": article_element.find_element(By.CLASS_NAME, "post-card-title").text,
-            "post_excerpt": article_element.find_element(By.CLASS_NAME, "post-card-excerpt").text,
-            "post_date": article_element.find_element(By.CLASS_NAME, "post-card-meta-date").text,
-            "post_length": article_element.find_element(By.CLASS_NAME, "post-card-meta-length").text ,
-            "post_image_header": article_element.find_element(By.TAG_NAME, "img").get_attribute("src")
-        } 
-
         article_link = article_element.find_element(By.CLASS_NAME, "post-card-image-link")
         href = article_link.get_attribute("href")
+        article = {
+            "type": "rarible",
+            "post_image": article_link.find_element(By.CLASS_NAME, "post-card-image").get_attribute("src"),
+            "post_title": article_element.find_element(By.CLASS_NAME, "post-card-title").text,
+            "post_date": article_element.find_element(By.CLASS_NAME, "post-card-meta-date").text,
+            "post_content": article_element.find_element(By.CLASS_NAME, "post-card-excerpt").text,
+            "post_tags": article_element.find_element(By.CLASS_NAME, "post-card-tags").text,
+            "post_length": article_element.find_element(By.CLASS_NAME, "post-card-meta-length").text ,
+            "post_link": href,
+        } 
+        
         driver.execute_script("window.open('" + href + "', '_blank');")
         driver.switch_to.window(driver.window_handles[-1])
         while True:
@@ -85,25 +87,29 @@ def rarible():
         article_child = {
             "post_author": driver.find_element(By.CLASS_NAME, "author-name").text,
             "post_description": driver.find_element(By.CLASS_NAME, "gh-content").text,
-            "post_link": href,
             "post_image": []
         }
-        images = driver.find_elements(By.TAG_NAME, "img")
-        for image in images[1:]:
+        images = driver.find_element(By.CLASS_NAME, "gh-content")
+        image_element = images.find_elements(By.TAG_NAME, "img")
+        for image in image_element:
             src_value = image.get_attribute("src")
             article_child["post_image"].append(src_value)
         driver.close()
         driver.switch_to.window(driver.window_handles[0])
         article.update(article_child)
         articles_list.append(article)
-    data = {}
     
-    with open("data.json", "r") as json_file:
-        data = json.load(json_file)
-    data["rarible"] = articles_list
-
-    with open("data.json", "w") as json_file:
-        json.dump(data, json_file, indent=4)
+    # with open("rarible.json", "w") as outfile:
+    #     json.dump(articles_list, outfile)
+    try:
+        with open("data.json", 'r') as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        # Nếu file không tồn tại, tạo một danh sách mới
+        data = []
+    data.extend(articles_list)
+    with open("data.json", 'w') as file:
+        json.dump(data, file, indent=2)
 
     driver.close()
 
