@@ -10,6 +10,7 @@ import json
 import argparse
 from binance import binance
 from rarible import rarible
+from test import get_comment
 # Configure Chrome options
 chrome_options = ChromeOptions()
 # Run Chrome in headless mode (no GUI)
@@ -28,16 +29,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--binance", help="run binance", action="store_true")
     parser.add_argument("--rarible", help="run rarible", action="store_true")
+    parser.add_argument("--test", help="run test", action="store_true")
     # parser.add_argument("crawlfile", type=str)
 
     args = parser.parse_args()
-    # if args.crawlfile == "binance":
-    #     binance()
-    # else:
-    #     rarible()
     if args.binance:
         binance()
     elif args.rarible:
         rarible()
+    elif args.test:
+        get_comment("https://f247.com/t/phan-tich-co-phieu-nhua-aaa/153640")
     else:
-        print("Please specify a valid option (--binance or --rarible)")
+        print("Please specify a valid option")
