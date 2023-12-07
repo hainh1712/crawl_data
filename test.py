@@ -48,7 +48,7 @@ def get_comment(driver, link):
         #     break
         for _ in range(1,21):
             try:
-                if current_i == label_comment:
+                if current_i > label_comment:
                     break
                 comment = searchs.find_element(By.ID, f"post_{current_i}")
                 comment_data = {
