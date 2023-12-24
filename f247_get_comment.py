@@ -10,6 +10,7 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import time
 import json
 import csv
+from pymongo import MongoClient
 # Configure Chrome options
 chrome_options = ChromeOptions()
 # Run Chrome in headless mode (no GUI)
@@ -22,7 +23,7 @@ chrome_options.add_argument("--no-sandbox")
 
 # Set up the Chrome web driver
 
-csv_filename = "data_stock_f247.csv"
+# csv_filename = "data_stock_f247.csv"
 # with open(csv_filename, mode="w", encoding="utf-8-sig", newline="") as csv_file:
 #     fieldnames = ["post_title", "post_category", "post_tags",
 #                     "user_post", "date_post", "react_post", "badge_post", "content_post", 
@@ -30,7 +31,7 @@ csv_filename = "data_stock_f247.csv"
 #     csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
 #     csv_writer.writeheader()
 
-def get_comment(url):
+def get_comment(url, stock_tag):
     # url = f"https://f247.com/t/gia-nhua-dau-vao-giam-co-phieu-nao-huong-loi/494297"
     print(url)
     driver = webdriver.Chrome(service=ChromeService("./chromedriver.exe"), options=chrome_options)
@@ -91,7 +92,7 @@ def get_comment(url):
                 cooked_element = comment.find_element(By.CLASS_NAME, 'cooked')
                 if cooked_element.text:
                     comment_data["content"] = cooked_element.text.encode().decode('utf-8')
-                    if "aaa" in comment_data["content"].lower():
+                    if stock_tag.lower() in comment_data["content"].lower():
                         data_each_post["comment"].append(comment_data)
                 else:
                     comment_data["content"] = ""
@@ -108,20 +109,26 @@ def get_comment(url):
         new_page_height = driver.execute_script("return document.body.scrollHeight")
         if new_page_height == page_height:
             break
-    with open('output.json', 'w', encoding='utf-8') as json_file:
-        json.dump(data_each_post, json_file, ensure_ascii=False, indent=2)
+    try:
+        with open(f'data/{stock_tag}.json', 'r', encoding='utf-8') as json_file:
+            existing_data = json.load(json_file)
+    except FileNotFoundError:
+        existing_data = []
+    existing_data.append(data_each_post)
+    with open(f'data/{stock_tag}.json', 'w', encoding='utf-8') as json_file:
+        json.dump(existing_data, json_file, ensure_ascii=False, indent=2)
     driver.quit()
     
-# with open("post_href_error.csv", "r", newline="", encoding="utf-8") as file:
-#     data_href = csv.reader(file)
-#     next(data_href)  
-#     for row in data_href:
-#         post_href = row[0]  
-#         if not any(row):
-#             break
-#         get_comment(post_href)
+with open("post_href_tag.csv", "r", newline="", encoding="utf-8") as file:
+    data_href = csv.reader(file)
+    next(data_href)  
+    for row in data_href:
+        post_href = row[0]  
+        tag = row[1]
+        if not any(row):
+            break
+        get_comment(post_href, tag)
     
-# get_comment("https://f247.com/t/aph-an-phat-tien-phong-san-xuat-san-pham-xanh-tai-viet-nam/65570")
 
 
 
